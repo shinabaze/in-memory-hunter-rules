@@ -1,0 +1,32 @@
+<Sysmon schemaversion="4.90">
+  <EventFiltering>
+    <!-- Event ID 8: CreateRemoteThread - Detect injection into target processes -->
+    <RuleGroup name="Detect_Process_Injection_Thread" groupRelation="or">
+      <CreateRemoteThread onmatch="include">
+        <TargetImage condition="end with">\explorer.exe</TargetImage>
+        <TargetImage condition="end with">\svchost.exe</TargetImage>
+        <TargetImage condition="end with">\spoolsv.exe</TargetImage>
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <StartFunction condition="is">LoadLibraryA</StartFunction>
+        <StartFunction condition="is">LoadLibraryW</StartFunction>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Event ID 10: ProcessAccess - Detect memory manipulation with VM_WRITE | VM_OPERATION -->
+    <RuleGroup name="Detect_Process_Memory_Tampering" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <GrantedAccess condition="contains">0x1F0FFF</GrantedAccess>
+        <GrantedAccess condition="contains">0x0028</GrantedAccess>
+        <GrantedAccess condition="contains">0x0038</GrantedAccess>
+        <CallTrace condition="contains">UNKNOWN</CallTrace>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event ID 25: ProcessTampering - Detect process hollowing / herpaderping -->
+    <RuleGroup name="Detect_Process_Hollowing" groupRelation="or">
+      <ProcessTampering onmatch="include">
+        <Type condition="is">Image is replaced</Type>
+      </ProcessTampering>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
